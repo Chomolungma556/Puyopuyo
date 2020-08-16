@@ -62,6 +62,7 @@ int puyoSubPositions[][2] =
 void display();
 bool isPuyoOverlap(int argPuyoX, int argPuyoY, int argPuyoAngle);
 int getConnectedPuyoCount(int argX, int argY, int argType, int count);
+void removeConnectedPuyo(int argX, int argY, int argType);
 
 int main()
 {
@@ -132,9 +133,13 @@ int main()
                     {
                         for (int x = 1; x < FIELD_WIDTH - 1; ++x)
                         {
-                            if (getConnectedPuyoCount(x, y, cells[x][y], 0) >= CHAIN_NUMBER)
+                            if (CELL_NONE != cells[x][y])
                             {
-                                cells[x][y] = CELL_NONE;
+                                if (getConnectedPuyoCount(x, y, cells[x][y], 0) >= CHAIN_NUMBER)
+                                {
+                                    removeConnectedPuyo(x, y, cells[x][y]);
+                                    isLocked = true;
+                                }
                             }
                         }
                     }
@@ -158,9 +163,11 @@ int main()
 
                 switch (_getch())
                 {
+                /* DEBUG
                 case 'w':
                     --dummyPuyoY;
                     break;
+                */
                 case 's':
                     ++dummyPuyoY;
                     break;
@@ -201,7 +208,7 @@ void display()
         displayBuffer[puyoSubX][puyoSubY] = puyoType;
     }
 
-    for (int y = 0; y < FIELD_HEIGHT; ++y)
+    for (int y = 1; y < FIELD_HEIGHT; ++y)
     {
         for (int x = 0; x < FIELD_WIDTH; ++x)
         {
@@ -246,4 +253,21 @@ int getConnectedPuyoCount(int argX, int argY, int argType, int count)
     }
 
     return count;
+}
+
+void removeConnectedPuyo(int argX, int argY, int argType)
+{
+    if (argType != cells[argX][argY])
+    {
+        return;
+    }
+
+    cells[argX][argY] = CELL_NONE;
+
+    for (int i = 0; i < PUYO_ANGLE_MAX; ++i)
+    {
+        int connectedX = argX + puyoSubPositions[i][0];
+        int connectedY = argY + puyoSubPositions[i][1];
+        removeConnectedPuyo(connectedX, connectedY, argType);
+    }
 }
